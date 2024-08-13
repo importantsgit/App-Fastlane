@@ -15,17 +15,18 @@ jobs:
           
   testflight:
     macos:
-      xcode: 14.2.0
+      xcode: 15.3.0
+    environment:
+      FL_OUTPUT_DIR: output
+      FASTLANE_LANE: tf
     steps:
       - checkout
-      - ruby/install-deps  # Ruby orb을 사용하여 의존성 설치
+      - run: bundle install
       - run:
-          name: Navigate to App-Fastlane directory and run commands
-          command: |
-            cd App-Fastlane
-            pwd
-            ls -la
-            bundle exec fastlane tf
+          name: Fastlane
+          command: bundle exec fastlane $FASTLANE_LANE
+      - store_artifacts:
+          path: output
 
 workflows:
   version: 2
