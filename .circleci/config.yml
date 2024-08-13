@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  ruby: circleci/ruby@1.2.0
+  ruby: circleci/ruby@2.0.1
 
 jobs:
   say-hello:
@@ -18,15 +18,13 @@ jobs:
       xcode: 14.2.0
     steps:
       - checkout
-      - ruby/setup:
-          version: '3.0.2'  # 사용하려는 Ruby 버전 지정 (필요에 따라 조정)
+      - ruby/install-deps  # Ruby orb을 사용하여 의존성 설치
       - run:
           name: Navigate to App-Fastlane directory and run commands
           command: |
             cd App-Fastlane
             pwd
             ls -la
-            bundle install
             bundle exec fastlane tf
 
 workflows:
