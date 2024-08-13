@@ -1,0 +1,9 @@
+git_url("https://github.com/importantsgit/App_Fastlane_Cert.git")
+
+storage_mode("git")
+
+type("development") # The default type, can be: appstore, adhoc, enterprise or development
+
+app_identifier(["com.importants.fastlane"])
+
+username("ljh9716@naver.com")

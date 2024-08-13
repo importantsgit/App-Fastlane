@@ -86,3 +86,6 @@ fastlane/test_output
 iOSInjectionProject/
 
 # End of https://www.toptal.com/developers/gitignore/api/swift
+App-Fastlane/fastlane/.env
+App-Fastlane/fastlane/report.xml
+PassPhrase.txt

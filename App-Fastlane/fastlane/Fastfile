@@ -1,0 +1,96 @@
+# fastlane_version: "2.222.0"
+default_platform(:ios)
+
+platform :ios do
+  # 버전 관리 레인
+  desc "Increment patch version"
+  lane :increment_patch do
+    increment_version('patch')
+  end
+
+  desc "Increment minor version"
+  lane :increment_minor do
+    increment_version('minor')
+  end
+
+  # 배포 관련 레인
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    setup_app_store_connect
+    build_and_upload_to_testflight
+  end
+
+  desc "Release to App Store"
+  lane :release do
+    setup_app_store_connect
+    build_and_upload_to_app_store
+  end
+
+  # 유틸리티 레인
+  desc "Generate new certificates"
+  lane :generate_new_certificates do
+    # TODO: 필요한 액션을 여기 추가하세요.
+  end
+
+  desc "Send notification to Slack"
+  lane :post_to_slack do
+    send_slack_notification
+  end
+
+  # 헬퍼 메서드
+  private_lane :increment_version do |type|
+    current_version = get_version_number(xcodeproj: "App-Fastlane.xcodeproj")
+    version_array = current_version.split('.')
+    
+    case type
+    when 'patch'
+      version_array[2] = (version_array[2].to_i + 1).to_s.rjust(2, '0')
+    when 'minor'
+      version_array[1] = (version_array[1].to_i + 1).to_s.rjust(2, '0')
+      version_array[2] = '01'
+    end
+    
+    new_version = version_array.join('.')
+    increment_version_number(version_number: new_version, xcodeproj: "App-Fastlane.xcodeproj")
+    puts "Version increased to #{new_version}"
+  end
+
+  private_lane :setup_app_store_connect do
+    app_store_connect_api_key(is_key_content_base64: true, in_house: false)
+    sync_code_signing(type: "appstore")
+  end
+
+  private_lane :build_and_upload_to_testflight do
+    build_app(scheme: "App-Fastlane")
+    begin
+      latest_build = latest_testflight_build_number(app_identifier: "com.importants.fastlane")
+    rescue
+      latest_build = 0
+    end
+    increment_build_number(build_number: latest_build + 1, xcodeproj: "App-Fastlane.xcodeproj")
+    upload_to_testflight
+    post_to_slack
+  end
+
+  private_lane :build_and_upload_to_app_store do
+    build_app(scheme: "App-Fastlane")
+    increment_build_number(
+      build_number: app_store_build_number + 1,
+      xcodeproj: "App-Fastlane.xcodeproj"
+    )
+    upload_to_app_store
+    post_to_slack
+  end
+
+  private_lane :send_slack_notification do
+    version_number = get_version_number(xcodeproj: "App-Fastlane.xcodeproj")
+    build_number = get_build_number(xcodeproj: "App-Fastlane.xcodeproj")
+    slack(
+      username: "Fastlane",
+      message: "🎉 배포 완료 🎉",
+      icon_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/App_Store_%28iOS%29.svg/1024px-App_Store_%28iOS%29.svg.png",
+      slack_url: "https://hooks.slack.com/services/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",
+      payload: { "Version": "#{version_number}(#{build_number})" }
+    )
+  end
+end
