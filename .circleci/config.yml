@@ -1,10 +1,12 @@
 version: 2.1
 
+orbs:
+  ruby: circleci/ruby@1.2.0
+
 jobs:
   say-hello:
     docker:
       - image: cimg/base:current
-
     steps:
       - checkout
       - run:
@@ -19,31 +21,19 @@ jobs:
       - ruby/setup:
           version: '3.0.2'  # 사용하려는 Ruby 버전 지정 (필요에 따라 조정)
       - run:
-          name: Navigate to App-Fastlane directory
-          command: cd App-Fastlane
-      - run:
-          name: Print current directory and list files
+          name: Navigate to App-Fastlane directory and run commands
           command: |
+            cd App-Fastlane
             pwd
             ls -la
-      - run:
-          name: Bundle install
-          command: |
-            cd App-Fastlane
             bundle install
-      - run:
-          name: Fastlane TestFlight
-          command: |
-            cd App-Fastlane
             bundle exec fastlane tf
 
 workflows:
-  say-hello-workflow:
+  version: 2
+  build-test-deploy:
     jobs:
       - say-hello
-  
-  build-and-deploy:
-    jobs:
       - testflight:
           filters:
             branches:
